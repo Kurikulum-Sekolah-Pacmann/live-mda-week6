@@ -8,10 +8,13 @@ import os
 # Inisialisasi FastAPI
 app = FastAPI()
 
-# Konfigurasi Spark Master (sesuaikan dengan alamat Spark Anda)
-SPARK_MASTER_URL = os.getenv("SPARK_MASTER_URL", "spark://spark-master:7077")
+# Variables
+SPARK_MASTER_URL = os.getenv("SPARK_MASTER_URL")
 
-# PYTHON_PATH = "/usr/bin/python3.9"
+MODEL_PATH = os.getenv("MODEL_PATH")
+S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY")
+S3_SECRET_KEY = os.getenv("S3_SECRET_KEY")
+S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
 
 # Inisialisasi Spark Session
 spark = SparkSession.builder \
@@ -20,9 +23,9 @@ spark = SparkSession.builder \
     .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.262") \
     .config("spark.executor.memory", "2g") \
     .config("spark.driver.memory", "1g") \
-    .config("spark.hadoop.fs.s3a.access.key", "minio") \
-    .config("spark.hadoop.fs.s3a.secret.key", "minio123") \
-    .config("spark.hadoop.fs.s3a.endpoint", "http://minio:9000") \
+    .config("spark.hadoop.fs.s3a.access.key", S3_ACCESS_KEY) \
+    .config("spark.hadoop.fs.s3a.secret.key", S3_SECRET_KEY) \
+    .config("spark.hadoop.fs.s3a.endpoint", S3_ENDPOINT_URL) \
     .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem") \
     .config("spark.hadoop.fs.s3a.path.style.access", "true") \
     .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false") \
@@ -30,8 +33,7 @@ spark = SparkSession.builder \
     .getOrCreate()
 
 
-# Load Model dari MinIO
-MODEL_PATH = "s3a://ml-bucket/model/ml_model"
+# Load Model dari S3
 try:
     model = RandomForestClassificationModel.load(MODEL_PATH)
     print("✅ Model loaded successfully")

@@ -6,6 +6,12 @@ services:
       dockerfile: Dockerfile
     image: ml_api
     container_name: ml_api
+    environment:
+      SPARK_MASTER_URL: ${SPARK_MASTER_URL}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL}
+      MODEL_PATH: ${MODEL_PATH}
     ports:
       - 8000:8000
     networks:
