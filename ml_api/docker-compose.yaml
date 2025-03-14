@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  ml_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ml_api
+    container_name: ml_api
+    ports:
+      - 8000:8000
+    networks:
+      - airflow-networks
+
+networks:
+  airflow-networks:
+    external: True

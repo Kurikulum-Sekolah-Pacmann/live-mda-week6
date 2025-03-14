@@ -65,7 +65,7 @@ for indexer in indexers:
 # Assemble features
 feature_cols = [
     "person_age", "person_income", "person_emp_length", "loan_amnt", "loan_int_rate",
-    "loan_percent_income", "cb_person_cred_hist_length",
+    "loan_percent_income", "cb_person_cred_hist_length",    
     "person_home_ownership_index", "loan_intent_index", "loan_grade_index", "cb_person_default_on_file_index"
 ]
 

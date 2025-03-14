@@ -1,0 +1,10 @@
+pandas
+joblib
+fastapi==0.115.3
+fastapi-cli==0.0.5
+pydantic
+scikit-learn
+numpy
+uvicorn
+pyspark
+setuptools
