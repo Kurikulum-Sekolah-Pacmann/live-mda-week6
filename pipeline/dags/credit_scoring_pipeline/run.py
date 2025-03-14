@@ -1,6 +1,14 @@
 from airflow.decorators import dag
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from datetime import datetime, timedelta
+from airflow.hooks.base import BaseHook
+
+#
+# Get S3 connection
+S3_CONN = BaseHook.get_connection('s3-conn')
+S3_ENDPOINT_URL = S3_CONN.extra_dejson.get('endpoint_url')
+S3_ACCESS_KEY = S3_CONN.login
+S3_SECRET_KEY = S3_CONN.password
 
 # Define the list of JAR files required for Spark
 jar_list = [
@@ -11,9 +19,9 @@ jar_list = [
 
 # Define Spark configuration
 spark_conf = {
-    'spark.hadoop.fs.s3a.access.key': 'minio',
-    'spark.hadoop.fs.s3a.secret.key': 'minio123',
-    'spark.hadoop.fs.s3a.endpoint': 'http://minio:9000',
+    'spark.hadoop.fs.s3a.access.key': S3_ACCESS_KEY,
+    'spark.hadoop.fs.s3a.secret.key': S3_SECRET_KEY,
+    'spark.hadoop.fs.s3a.endpoint': S3_ENDPOINT_URL,
     'spark.hadoop.fs.s3a.path.style.access': 'true',
     'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
     'spark.dynamicAllocation.enabled': 'true',

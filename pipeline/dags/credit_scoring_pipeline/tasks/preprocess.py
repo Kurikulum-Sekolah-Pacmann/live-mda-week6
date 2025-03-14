@@ -2,27 +2,32 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, when
 from pyspark.ml.feature import StringIndexer, VectorAssembler
 import boto3
+from airflow.hooks.base import BaseHook
 
 # Initialize Spark Session
 spark = SparkSession.builder.appName("Preprocessing").getOrCreate()
 
-# MinIO Configuration
-s3_endpoint = "http://minio:9000"
-s3_access_key = "minio"
-s3_secret_key = "minio123"
+# Get S3 connection
+S3_CONN = BaseHook.get_connection('s3-conn')
+S3_ENDPOINT_URL = S3_CONN.extra_dejson.get('endpoint_url')
+S3_ACCESS_KEY = S3_CONN.login
+S3_SECRET_KEY = S3_CONN.password
 bucket_name = "ml-bucket"
 data_prefix = "daily_data/"
 
 # Initialize Boto3 client
 s3 = boto3.client(
     's3',
-    endpoint_url=s3_endpoint,
-    aws_access_key_id=s3_access_key,
-    aws_secret_access_key=s3_secret_key
+    endpoint_url=S3_ENDPOINT_URL,
+    aws_access_key_id=S3_ACCESS_KEY,
+    aws_secret_access_key=S3_SECRET_KEY
 )
 
 # List all Parquet files in the MinIO bucket
-response = s3.list_objects_v2(Bucket=bucket_name, Prefix=data_prefix)
+response = s3.list_objects_v2(
+    Bucket=bucket_name, 
+    Prefix=data_prefix
+)
 
 # Extract file paths
 file_list = [
@@ -38,10 +43,13 @@ if not file_list:
 # Load and merge all daily data
 df_combined = spark.read.parquet(*file_list)
 
-print(df_combined.show())
-
 # Handle missing values
-df = df_combined.fillna({'person_emp_length': 0, 'loan_int_rate': df_combined.agg({'loan_int_rate': 'mean'}).collect()[0][0]})
+df = df_combined.fillna(
+    {
+        'person_emp_length': 0, 
+        'loan_int_rate': df_combined.agg({'loan_int_rate': 'mean'}).collect()[0][0]
+    }
+)
 
 # Encode categorical variables
 indexers = [
@@ -67,9 +75,14 @@ df = assembler.transform(df)
 # Convert label to integer
 df = df.withColumn("label", col("loan_status").cast("integer"))
 
-# Save preprocessed data
-df.select("features", "label").write.mode("overwrite").parquet("s3a://ml-bucket/preprocessed_data/data_credit_preprocessed.parquet")
+# Split data (80% training, 20% testing)
+train_data, test_data = df.randomSplit([0.8, 0.2])
 
-print("✅ Data preprocessing selesai.")
+# Save train and test data
+train_data.write.mode("overwrite").parquet("s3a://ml-bucket/preprocessed_data/data_credit_train.parquet")
+test_data.write.mode("overwrite").parquet("s3a://ml-bucket/preprocessed_data/data_credit_test.parquet")
+
+
+print("Preprocessing completed.")
 
 spark.stop()

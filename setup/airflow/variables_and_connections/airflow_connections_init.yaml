@@ -1,6 +1,6 @@
 credit-data-db-conn:
   conn_type: postgres
-  description: Pacbikes data source
+  description: Sumber data kredit
   extra: ''
   host: sources
   login: postgres
@@ -9,7 +9,7 @@ credit-data-db-conn:
   schema: postgres
 spark-conn:
   conn_type: spark
-  description: ''
+  description: Koneksi ke spark
   extra: ''
   host: spark://spark-master
   login: ''
@@ -34,12 +34,3 @@ slack_conn:
   password:                         # Fill the token here
   port: null
   schema: ''
-warehouse:
-  conn_type: postgres
-  description: Koneksi ke data warehouse
-  extra: '{}'
-  host: warehouse
-  login: postgres
-  password: postgres
-  port: 5432
-  schema: postgres

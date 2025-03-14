@@ -1,19 +1,28 @@
 from pyspark.sql import SparkSession
 from datetime import datetime
+from airflow.hooks.base import BaseHook
 
-# Constants
+# Data Sources connections
+POSTGRES_CONN = BaseHook.get_connection('credit-data-db-conn')
+POSTGRES_USERNAME = POSTGRES_CONN.login
+POSTGRES_PASSWORD = POSTGRES_CONN.password
+POSTGRES_HOST = POSTGRES_CONN.host
+POSTGRES_PORT = POSTGRES_CONN.port
+POSTGRES_DATABASE = POSTGRES_CONN.schema
+
 DATE = '{{ ds }}'
 
+# Create Spark session
 spark = SparkSession.builder.appName("ExtractData").getOrCreate()
 
 # Read data from database
 query = "(SELECT * FROM data_credit) as data"
 df = spark.read.jdbc(
-    url="jdbc:postgresql://sources:5432/postgres",
+    url=f"jdbc:postgresql://{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DATABASE}",
     table=query,
     properties={
-        "user": "postgres",
-        "password": "postgres",
+        "user": POSTGRES_USERNAME,
+        "password": POSTGRES_PASSWORD,
         "driver": "org.postgresql.Driver"
     }
 )
